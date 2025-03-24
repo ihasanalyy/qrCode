@@ -1,6 +1,7 @@
 // Initialize express router
 import qrCodeModel from '../Models/qrCodeSchema.js';
 import QRCode from 'qrcode';
+import cloudinary from '../Config/cloudinary.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -10,6 +11,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Fetch QR code
+// export const fetchQrCode = async (req, res) => {
+//     console.log("fetchQrCode");
+//     try {
+//         const { id } = req.params;
+//         console.log("id", id);
+//         const qrRecord = await qrCodeModel.findById(id);
+//         console.log("qrRecord", qrRecord);
+//         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
+
+//         const qrCodePath = path.join(__dirname, "../qrcodes", `${id}.png`);
+//         const qrCodeURL = `http://localhost:8000/api/qrcode/scan/${id}`;
+//         await QRCode.toFile(qrCodePath, qrCodeURL); // Generate QR code only id 
+
+//         qrRecord.qrCodeImage = qrCodePath;
+//         await qrRecord.save();
+
+//         res.json({ qrCodeImage: qrCodePath });
+//     } catch (error) {
+//         res.status(500).json({ error: "Server error" });
+//     }
+// };
 export const fetchQrCode = async (req, res) => {
     console.log("fetchQrCode");
     try {
@@ -19,15 +41,24 @@ export const fetchQrCode = async (req, res) => {
         console.log("qrRecord", qrRecord);
         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
 
-        const qrCodePath = path.join(__dirname, "../qrcodes", `${id}.png`);
-        const qrCodeURL = `https://qrcode-production-b639.up.railway.app/api/qrcode/scan/${id}`;
-        await QRCode.toFile(qrCodePath, qrCodeURL); // Generate QR code only id 
+        const qrCodeURL = `https://res.cloudinary.com/dr6z24wrf/image/upload/qrcodes/${id}.png`;
 
-        qrRecord.qrCodeImage = qrCodePath;
+        // Generate QR code as base64 and upload to Cloudinary
+        const qrCodeBase64 = await QRCode.toDataURL(qrCodeURL);
+        const uploadResponse = await cloudinary.uploader.upload(qrCodeBase64, {
+            folder: 'qrcodes',
+            public_id: id,
+            overwrite: true,
+            resource_type: "auto",
+        });
+
+        // Save the Cloudinary URL in the database instead of localhost URL
+        qrRecord.qrCodeImage = uploadResponse.secure_url;
         await qrRecord.save();
 
-        res.json({ qrCodeImage: qrCodePath });
+        res.json({ qrCodeImage: uploadResponse.secure_url });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: "Server error" });
     }
 };
