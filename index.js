@@ -2,7 +2,6 @@ import express from 'express';
 import { connectDB } from './Config/db.js';
 import dotenv from 'dotenv';
 import userRoutes from './Routes/qrCodeRoutes.js';
-import upload from './Config/multer.js';
 
 const app = express();
 app.use(express.json());

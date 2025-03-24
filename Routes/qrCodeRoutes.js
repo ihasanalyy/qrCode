@@ -7,4 +7,6 @@ router.get('/qrcode/details/:id', getQrCode)
 router.get('/qrcode/scan/:id', scanQrCode)
 router.post('/generate/qrcode', generateQrCode)
 
+
+
 export default router;
