@@ -11,27 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Fetch QR code
-// export const fetchQrCode = async (req, res) => {
-//     console.log("fetchQrCode");
-//     try {
-//         const { id } = req.params;
-//         console.log("id", id);
-//         const qrRecord = await qrCodeModel.findById(id);
-//         console.log("qrRecord", qrRecord);
-//         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
-
-//         const qrCodePath = path.join(__dirname, "../qrcodes", `${id}.png`);
-//         const qrCodeURL = `http://localhost:8000/api/qrcode/scan/${id}`;
-//         await QRCode.toFile(qrCodePath, qrCodeURL); // Generate QR code only id 
-
-//         qrRecord.qrCodeImage = qrCodePath;
-//         await qrRecord.save();
-
-//         res.json({ qrCodeImage: qrCodePath });
-//     } catch (error) {
-//         res.status(500).json({ error: "Server error" });
-//     }
-// };
 export const fetchQrCode = async (req, res) => {
     console.log("fetchQrCode");
     try {
@@ -66,13 +45,15 @@ export const fetchQrCode = async (req, res) => {
 // Create QR code
 export const generateQrCode = async (req, res) => {
     try {
-        const { name, type, text, pickupDetails } = req.body;
+        const { name, type, text, pickupDetails, userId } = req.body;
+        console.log("name", name, "type", type, "text", text, "pickupDetails", pickupDetails, "userId", userId);
         if (!name || !type || (type === "text" && !text) || (type === "location" && !pickupDetails)) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const qrRecord = new qrCodeModel({ name, type, text, pickupDetails });
+        const qrRecord = new qrCodeModel({ name, type, text, pickupDetails, userId });
         await qrRecord.save();
+        console.log("qrRecord", qrRecord);
 
         res.json({ id: qrRecord._id });
     } catch (error) {
@@ -108,11 +89,19 @@ export const scanQrCode = async (req, res) => {
         console.log("id", id);
         const qrRecord = await qrCodeModel.findById(id);
         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
-        qrRecord.scannedFrom = browser;
-        qrRecord.scannedViews += 1;
+        // Check if the browser already exists in the scannedData array
+        const existingBrowserData = qrRecord.scannedData.find(data => data.browser === browser);
+        if (existingBrowserData) {
+            // If browser already exists, increment its views
+            existingBrowserData.views += 1;
+        } else {
+            // If not, add a new entry for the browser with initial views = 1
+            qrRecord.scannedData.push({ browser: browser, views: 1 });
+        }
+
+        // Save the updated record
         await qrRecord.save();
-        console.log("qrRecord", qrRecord);
-        res.json({ message: "Scanned successfully" });
+        res.status(200).json({ message: "Scan successfully" });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
@@ -120,12 +109,12 @@ export const scanQrCode = async (req, res) => {
 
 export const getScaannedQrCodes = async (req, res) => {
     const { id } = req.params;
-    console.log("id", id);
+    console.log("id getscannedviews", id);
     try {
         const qrRecords = await qrCodeModel.findById(id);
         console.log("qrRecords", qrRecords);
         if (!qrRecords) return res.status(404).json({ error: "QR Code not found" });
-        const scannedDevices = qrRecords.map((record) => record.scannedFrom);
+        const scannedDevices = qrRecords.scannedFrom;
         console.log("scannedDevices", scannedDevices);
         res.json(scannedDevices);
     } catch (error) {
