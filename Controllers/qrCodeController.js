@@ -78,6 +78,7 @@ export const scanQrCode = async (req, res) => {
         const qrRecord = await qrCodeModel.findById(id);
         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
         qrRecord.scannedFrom = browser;
+        qrRecord.scannedViews += 1;
         await qrRecord.save();
         console.log("qrRecord", qrRecord);
         res.json({ message: "Scanned successfully" });
@@ -87,9 +88,15 @@ export const scanQrCode = async (req, res) => {
 };
 
 export const getScaannedQrCodes = async (req, res) => {
+    const { id } = req.params;
+    console.log("id", id);
     try {
-        const qrRecords = await qrCodeModel.find({ scannedFrom: { $ne: null } });
-        res.json(qrRecords);
+        const qrRecords = await qrCodeModel.findById(id);
+        console.log("qrRecords", qrRecords);
+        if (!qrRecords) return res.status(404).json({ error: "QR Code not found" });
+        const scannedDevices = qrRecords.map((record) => record.scannedFrom);
+        console.log("scannedDevices", scannedDevices);
+        res.json(scannedDevices);
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
