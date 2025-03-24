@@ -20,7 +20,7 @@ export const fetchQrCode = async (req, res) => {
         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
 
         const qrCodePath = path.join(__dirname, "../qrcodes", `${id}.png`);
-        const qrCodeURL = `http://localhost:8000/api/qrcode/scan/${id}`;
+        const qrCodeURL = `https://qrcode-production-b639.up.railway.app/api/qrcode/scan/${id}`;
         await QRCode.toFile(qrCodePath, qrCodeURL); // Generate QR code only id 
 
         qrRecord.qrCodeImage = qrCodePath;
