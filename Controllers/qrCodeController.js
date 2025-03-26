@@ -45,13 +45,13 @@ export const fetchQrCode = async (req, res) => {
 // Create QR code
 export const generateQrCode = async (req, res) => {
     try {
-        const { name, type, text, pickupDetails, userId } = req.body;
+        const { name, type, text, pickupDetails, userId, company } = req.body;
         console.log("name", name, "type", type, "text", text, "pickupDetails", pickupDetails, "userId", userId);
         if (!name || !type || (type === "text" && !text) || (type === "location" && !pickupDetails)) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const qrRecord = new qrCodeModel({ name, type, text, pickupDetails, userId });
+        const qrRecord = new qrCodeModel({ name, type, text, pickupDetails, userId, company });
         await qrRecord.save();
         console.log("qrRecord", qrRecord);
 
@@ -121,4 +121,63 @@ export const getScaannedQrCodes = async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 }
+
+// get all qr codes by type
+export const fetchQrCodesByType = async (req, res) => {
+    try {
+        const { type } = req.params; // Get the 'type' parameter from the request
+        console.log("QR Code Type:", type);
+
+        const qrCodes = await qrCodeModel.find({ type }); // Find QR codes by type
+        if (qrCodes.length === 0) {
+            return res.status(404).json({ message: `No QR codes found for type: ${type}` });
+        }
+        qrCodes?.map((qrCode)=>res.json(qrCode.qrCodeImage)); // Return the matching QR codes
+    } catch (error) {
+        console.error("Error fetching QR codes by type:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+// Get all scans filtered by QR code and company
+export const getScansByQrAndCompany = async (req, res) => {
+    try {
+        // Extract `qrCodeId` and `company` from path parameters (req.params)
+        console.log("getScansByQrAndCompany", req.params);
+        const { id, company } = req.params;
+        console.log("qrCodeId", id, "company", company);
+
+        if (!id) {
+            return res.status(400).json({ error: "QR Code ID is required." });
+        }
+
+        const filter = { _id: id }; // Base filter
+
+        // Dynamically add company filter if provided
+        if (company) {
+            filter.company = company;
+        }
+
+        // Fetch QR code data from DB with the applied filter
+        const qrCodeData = await qrCodeModel.findOne(filter);
+
+        if (!qrCodeData) {
+            return res.status(404).json({ error: "QR Code not found." });
+        }
+
+        // Construct and send the response
+        res.status(200).json({
+            qrCodeId: qrCodeData._id,
+            company: qrCodeData.company || "N/A",
+            scannedData: qrCodeData.scannedData,
+            totalViews: qrCodeData.scannedViews,
+        });
+
+    } catch (error) {
+        console.error("Error fetching scans by QR code and company:", error);
+        res.status(500).json({ error: "Server error." });
+    }
+};
+
+
 
