@@ -11,35 +11,66 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Fetch QR code
+// export const fetchQrCode = async (req, res) => {
+//     console.log("fetchQrCode");
+//     try {
+//         const { id } = req.params;
+//         console.log("id", id);
+//         const qrRecord = await qrCodeModel.findById(id);
+//         console.log("qrRecord", qrRecord);
+//         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
+
+//         const qrCodeURL = `https://res.cloudinary.com/dr6z24wrf/image/upload/qrcodes/${id}.png`;
+
+//         // Generate QR code as base64 and upload to Cloudinary
+//         const qrCodeBase64 = await QRCode.toDataURL(qrCodeURL);
+//         const uploadResponse = await cloudinary.uploader.upload(qrCodeBase64, {
+//             folder: 'qrcodes',
+//             public_id: id,
+//             overwrite: true,
+//             resource_type: "auto",
+//         });
+
+//         // Save the Cloudinary URL in the database instead of localhost URL
+//         qrRecord.qrCodeImage = uploadResponse.secure_url;
+//         await qrRecord.save();
+
+//         res.json({ qrCodeImage: uploadResponse.secure_url });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: "Server error" });
+//     }
+// };
 export const fetchQrCode = async (req, res) => {
-    console.log("fetchQrCode");
-    try {
-        const { id } = req.params;
-        console.log("id", id);
-        const qrRecord = await qrCodeModel.findById(id);
-        console.log("qrRecord", qrRecord);
-        if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
+    // console.log("fetchQrCode");
+    console.log("fetchQrCode",req.body);
+    // try {
+    //     const { id } = req.params;
+    //     console.log("id", id);
+    //     const qrRecord = await qrCodeModel.findById(id);
+    //     console.log("qrRecord", qrRecord);
+    //     if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
 
-        const qrCodeURL = `https://res.cloudinary.com/dr6z24wrf/image/upload/qrcodes/${id}.png`;
+    //     const qrCodeURL = `https://res.cloudinary.com/dr6z24wrf/image/upload/qrcodes/${id}.png`;
 
-        // Generate QR code as base64 and upload to Cloudinary
-        const qrCodeBase64 = await QRCode.toDataURL(qrCodeURL);
-        const uploadResponse = await cloudinary.uploader.upload(qrCodeBase64, {
-            folder: 'qrcodes',
-            public_id: id,
-            overwrite: true,
-            resource_type: "auto",
-        });
+    //     // Generate QR code as base64 and upload to Cloudinary
+    //     const qrCodeBase64 = await QRCode.toDataURL(qrCodeURL);
+    //     const uploadResponse = await cloudinary.uploader.upload(qrCodeBase64, {
+    //         folder: 'qrcodes',
+    //         public_id: id,
+    //         overwrite: true,
+    //         resource_type: "auto",
+    //     });
 
-        // Save the Cloudinary URL in the database instead of localhost URL
-        qrRecord.qrCodeImage = uploadResponse.secure_url;
-        await qrRecord.save();
+    //     // Save the Cloudinary URL in the database instead of localhost URL
+    //     qrRecord.qrCodeImage = uploadResponse.secure_url;
+    //     await qrRecord.save();
 
-        res.json({ qrCodeImage: uploadResponse.secure_url });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Server error" });
-    }
+    //     res.json({ qrCodeImage: uploadResponse.secure_url });
+    // } catch (error) {
+    //     console.error(error);
+    //     res.status(500).json({ error: "Server error" });
+    // }
 };
 
 // Create QR code
