@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
 
 const qrCodeSchema = new mongoose.Schema({
-  type: { type: String, enum: ["text", "location"], required: true },  
+  type: { type: String, enum: ["text", "location"]},  
   name: { type: String, required: true },
+  // userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   userId: { type: String, required: true },
+  public_id: { type: String },
   company: { type: String },
   text: { type: String }, // Only for text-based QR codes
   scannedData: [
