@@ -20,7 +20,6 @@ const qrCodeSchema = new mongoose.Schema({
       state: { type: String, default: "Unknown" }, // User's state/region
       country: { type: String, default: "Unknown" }, // User's country
       timestamp: { type: Date, default: Date.now }, // Scan timestamp
-      scanCounts: { type: Number, default: 0 }, // Views counter for that specific entry
     },
   ],// save the browser from which the QR code was scanned
   pickupDetails: { // Only for location-based QR codes
