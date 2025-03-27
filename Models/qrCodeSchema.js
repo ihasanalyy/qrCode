@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+
+
 const qrCodeSchema = new mongoose.Schema({
   type: { type: String, enum: ["text", "location"]},  
   name: { type: String, required: true },
@@ -10,10 +12,17 @@ const qrCodeSchema = new mongoose.Schema({
   text: { type: String }, // Only for text-based QR codes
   scannedData: [
     {
-      source: { type: String },       // Kis source se scan hua (e.g., "QR code", "Web link")
-      views: { type: Number, default: 0 } // Kitne views hain iss source ke liye
-    }
-  ], // save the browser from which the QR code was scanned
+      browser: { type: String }, // Browser name (e.g., "Chrome", "Firefox")
+      browserVersion: { type: String }, // Browser version (e.g., "113.0")
+      os: { type: String }, // OS name (e.g., "iOS", "Android", "Windows")
+      ipAddress: { type: String }, // User's IP address
+      city: { type: String, default: "Unknown" }, // User's city
+      state: { type: String, default: "Unknown" }, // User's state/region
+      country: { type: String, default: "Unknown" }, // User's country
+      timestamp: { type: Date, default: Date.now }, // Scan timestamp
+      scanCounts: { type: Number, default: 0 }, // Views counter for that specific entry
+    },
+  ],// save the browser from which the QR code was scanned
   pickupDetails: { // Only for location-based QR codes
     address: String,
     lat: Number,
