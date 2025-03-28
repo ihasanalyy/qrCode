@@ -96,9 +96,9 @@ export const createQrCodeRecord = async (req, res) => {
 export const getQrCode = async (req, res) => {
     console.log("getQrCode");
     try {
-        const { id } = req.params;
-        console.log("id", id);
-        const qrRecord = await qrCodeModel.findById(id);
+        const { userId } = req.params;
+        console.log("id", userId);
+        const qrRecord = await qrCodeModel.find({ userId });
         console.log("qrRecord", qrRecord);
         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
 
@@ -316,17 +316,17 @@ export const scanQrCode = async (req, res) => {
         // if (existingScanData) {
         //     existingScanData.views += 1; // Increment views if same browser & OS found
         // } else {
-            // Push new entry if no matching data exists
-            qrRecord.scannedData.push({
-                browser,
-                browserVersion,
-                os,
-                ipAddress,
-                city,
-                state,
-                country,
-            });
-        
+        // Push new entry if no matching data exists
+        qrRecord.scannedData.push({
+            browser,
+            browserVersion,
+            os,
+            ipAddress,
+            city,
+            state,
+            country,
+        });
+
 
         // Save updated record to DB
         await qrRecord.save();

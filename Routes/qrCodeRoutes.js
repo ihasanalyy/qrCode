@@ -2,8 +2,8 @@ import express from 'express';
 const router = express.Router();
 import { uploadQrCode, createQrCodeRecord, getQrCode, scanQrCode, getScannedQrCodes, getQrCodesByTypeAndUserId, getScansByQrAndCompany } from '../Controllers/qrCodeController.js';
 
-router.post('/upload/qrcode/:id', uploadQrCode) // Fetch QR code   /////////////////
-router.get('/qrcode/details/:id', getQrCode) // Get QR code details    ////////////////
+router.post('/upload/qrcode/:id', uploadQrCode) // upload QR code   /////////////////
+router.get('/qrcode/details/:userId', getQrCode) // Get QR code details    ////////////////
 router.get('/qrcode/scan/:userId', scanQrCode) // Scan QR code        ///////////
 router.get('/getscannedqrcodes/:userId', getScannedQrCodes) // Get scanned views
 router.post('/create/qrcode', createQrCodeRecord) // Create QR code ////////////
