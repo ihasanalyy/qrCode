@@ -92,13 +92,28 @@ export const createQrCodeRecord = async (req, res) => {
     }
 };
 
-// Get QR code details
+// Get QR codes details
 export const getQrCode = async (req, res) => {
     console.log("getQrCode");
     try {
         const { userId } = req.params;
         console.log("id", userId);
         const qrRecord = await qrCodeModel.find({ userId });
+        console.log("qrRecord", qrRecord);
+        if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
+
+        res.json(qrRecord);
+    } catch (error) {
+        res.status(500).json({ error: "Server error" });
+    }
+};
+
+// GEt single QR code details by id
+export const getQrCodeById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log("id", id);
+        const qrRecord = await qrCodeModel.findById(id);
         console.log("qrRecord", qrRecord);
         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
 
