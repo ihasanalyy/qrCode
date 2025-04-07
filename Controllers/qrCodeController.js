@@ -397,3 +397,23 @@ export const updateQrCode = async (req, res) => {
     }
 }
 
+// status of qr code
+export const statusQrCode = async (req, res) => {
+    const { id } = req.params;
+    const {status} = req.body;
+    console.log("status", status);
+    console.log("id", id);
+    try {
+        const qrRecord = await qrCodeModel.findByIdAndUpdate(
+            id,
+            { status: status },
+            { new: true } 
+          );
+          
+        if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
+        res.json({message: 'QR Code status updated successfully'});
+    } catch (error) {
+        res.status(500).json({ error: "Server error" });
+    }
+};
+

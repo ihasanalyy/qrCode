@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { uploadQrCode, createQrCodeRecord, getQrCode, scanQrCode,getQrCodeById ,getScannedQrCodes, getQrCodesByTypeAndUserId, getScansByQrAndCompany, deleteQrCode, updateQrCode } from '../Controllers/qrCodeController.js';
+import { uploadQrCode, createQrCodeRecord, getQrCode, scanQrCode,getQrCodeById ,getScannedQrCodes, getQrCodesByTypeAndUserId, getScansByQrAndCompany, deleteQrCode, updateQrCode, statusQrCode } from '../Controllers/qrCodeController.js';
 
 router.post('/upload/qrcode/:id', uploadQrCode) // upload QR code   /////////////////
 router.get('/qrcode/details/:userId', getQrCode) // Get QR code details    ////////////////
@@ -12,4 +12,5 @@ router.get('/getqrcode/bytype/:userId/:type', getQrCodesByTypeAndUserId); // Fet
 router.get("/getscannedDetails/bycompany/:userId/:name?", getScansByQrAndCompany); // Dynamically get scans based on filters 
 router.delete('/delete/qrcode/:id', deleteQrCode) // Delete QR code
 router.put('/update/qrcode/:id', updateQrCode) // Update QR code
+router.put('/status/qrcode/:id', statusQrCode)
 export default router;
