@@ -298,72 +298,123 @@ export const getScansByQrAndCompany = async (req, res) => {
 
 
 
-
 export const scanQrCode = async (req, res) => {
     try {
-        // Extract ID from route params and other data from query params
-        const { userId,id } = req.params;
-        console.log("userId", userId);
-        const {
-            browser,
-            browserVersion,
-            os,
-            ipAddress,
-            city,
-            state,
-            country,
-        } = req.body;
-
-        console.log("Browser Info:", browser, browserVersion);
-        console.log("Operating System:", os);
-        console.log("Location:", city, state, country);
-        console.log("IP Address:", ipAddress);
-
-        // Find the QR code record in the database
-        // const qrRecord = await qrCodeModel.findOne({ userId });
-        // console.log("qrRecord", qrRecord);
-        const scanData = new scanSchema({
-            userId,
-            browser,
-            browserVersion,
-            os,
-            ipAddress,
-            city,
-            state,
-            country,
-            qrCodeId: id, // Assuming you want to link the scan data to a specific QR code
-        });
-        await scanData.save(); // Save scan data to the database
-        // if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
-
-        // Check if a similar scan entry already exists in scannedData array
-        // const existingScanData = qrRecord.scannedData.find(
-        //     data => data.browser === browser && data.os === os
-        // );
-
-        // if (existingScanData) {
-        //     existingScanData.views += 1; // Increment views if same browser & OS found
-        // } else {
-        // Push new entry if no matching data exists
-        // qrRecord.scannedData.push({
-        //     browser,
-        //     browserVersion,
-        //     os,
-        //     ipAddress,
-        //     city,
-        //     state,
-        //     country,
-        // });
-
-
-        // Save updated record to DB
-        // await qrRecord.save();
-        res.status(200).json({ message: "Scan successfully", Link: `https://wa.me/your_phone_number` });
+      const { userId, id } = req.params;
+      const {
+        browser,
+        browserVersion,
+        os,
+        ipAddress,
+        city,
+        state,
+        country,
+      } = req.body;
+  
+      // Save scan data
+      const scanData = new scanSchema({
+        userId,
+        qrCodeId: id,
+        browser,
+        browserVersion,
+        os,
+        ipAddress,
+        city,
+        state,
+        country,
+      });
+      await scanData.save();
+  
+      const scanner = scanData._id;
+  
+      // Fetch QR code record for company message/text
+      const companyRecord = await qrCodeModel.findOne({ _id: id, userId });
+      if (!companyRecord) {
+        return res.status(404).json({ error: "QR Code not found" });
+      }
+  
+      const text = companyRecord?.text;
+  
+      res.status(200).json({
+        message: "Scan successful",
+        Link: `https://wa.me/447718930694?text=${encodeURIComponent(`${text}scanId:${scanner}`)}`,
+      });
+  
     } catch (error) {
-        console.error("Error saving scan data:", error);
-        res.status(500).json({ error: "Server error" });
+      console.error("Error saving scan data:", error.message);
+      res.status(500).json({ error: "Server error" });
     }
-};
+  };
+  
+  
+// export const scanQrCode = async (req, res) => {
+//     try {
+//         // Extract ID from route params and other data from query params
+//         const { userId, id } = req.params;
+//         console.log("userId", userId);
+//         const {
+//             browser,
+//             browserVersion,
+//             os,
+//             ipAddress,
+//             city,
+//             state,
+//             country,
+//         } = req.body;
+
+//         // console.log("Browser Info:", browser, browserVersion);
+//         // console.log("Operating System:", os);
+//         // console.log("Location:", city, state, country);
+//         // console.log("IP Address:", ipAddress);
+
+//         // Find the QR code record in the database
+//         // const qrRecord = await qrCodeModel.findOne({ userId });
+//         // console.log("qrRecord", qrRecord);
+//         const scanData = new scanSchema({
+//             userId,
+//             browser,
+//             browserVersion,
+//             os,
+//             ipAddress,
+//             city,
+//             state,
+//             country,
+//             qrCodeId: id, // Assuming you want to link the scan data to a specific QR code
+//         });
+//         await scanData.save(); // Save scan data to the database
+//         // if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
+//         const companyRecord = qrCodeModel.findOne({ userId });
+//         console.log('companyRecord', companyRecord);
+//         const text = companyRecord.text;
+//         console.log('text', text);
+//         // Check if a similar scan entry already exists in scannedData array
+//         // const existingScanData = qrRecord.scannedData.find(
+//         //     data => data.browser === browser && data.os === os
+//         // );
+
+//         // if (existingScanData) {
+//         //     existingScanData.views += 1; // Increment views if same browser & OS found
+//         // } else {
+//         // Push new entry if no matching data exists
+//         // qrRecord.scannedData.push({
+//         //     browser,
+//         //     browserVersion,
+//         //     os,
+//         //     ipAddress,
+//         //     city,
+//         //     state,
+//         //     country,
+//         // });
+
+
+//         // Save updated record to DB
+//         // await qrRecord.save();
+//         res.status(200).json({ message: "Scan successfully", Link: `https://wa.me/447718930694?text=${text}` });
+//     } catch (error) {
+//         console.error("Error saving scan data:", error);
+//         res.status(500).json({ error: "Server error" });
+//     }
+// };
 
 // delete qr code
 export const deleteQrCode = (req, res) => {
@@ -413,18 +464,18 @@ export const updateQrCode = async (req, res) => {
 // status of qr code
 export const statusQrCode = async (req, res) => {
     const { id } = req.params;
-    const {status} = req.body;
+    const { status } = req.body;
     console.log("status", status);
     console.log("id", id);
     try {
         const qrRecord = await qrCodeModel.findByIdAndUpdate(
             id,
             { status: status },
-            { new: true } 
-          );
-          
+            { new: true }
+        );
+
         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
-        res.json({message: 'QR Code status updated successfully'});
+        res.json({ message: 'QR Code status updated successfully' });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
