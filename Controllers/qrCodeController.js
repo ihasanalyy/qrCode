@@ -352,6 +352,48 @@ export const scanQrCode = async (req, res) => {
     }
 };
 
+// delete qr code
+export const deleteQrCode = (req, res) => {
+    const { id } = req.params;
+    console.log("id", id);
+    try {
+        qrCodeModel.findByIdAndDelete(id)
+            .then((result) => {
+                if (!result) {
+                    return res.status(404).json({ message: "QR Code not found" });
+                }
+                res.status(200).json({ message: "QR Code deleted successfully" });
+            })
+            .catch((error) => {
+                console.error(error);
+                res.status(500).json({ error: "Server error" });
+            });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+}
 
+// update qr code
+export const updateQrCode = async (req, res) => {
+    const { id } = req.params;
+    const { name, text } = req.body;
 
+    try {
+        const updatedQrCode = await qrCodeModel.findByIdAndUpdate(
+            id,
+            { name, text },
+            { new: true }
+        );
+
+        if (!updatedQrCode) {
+            return res.status(404).json({ error: "QR Code not found" });
+        }
+
+        res.status(200).json({ message: 'Updated QR Code successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+}
 

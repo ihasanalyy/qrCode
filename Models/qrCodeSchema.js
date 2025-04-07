@@ -27,6 +27,7 @@ const qrCodeSchema = new mongoose.Schema({
     lat: Number,
     lng: Number,
   },
+  
   qrCodeImage: { type: String }, // Local path or S3 URL in future
   scannedViews: { type: Number, default: 0 },
 }, { timestamps: true });
