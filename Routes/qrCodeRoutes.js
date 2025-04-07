@@ -5,7 +5,7 @@ import { uploadQrCode, createQrCodeRecord, getQrCode, scanQrCode,getQrCodeById ,
 router.post('/upload/qrcode/:id', uploadQrCode) // upload QR code   /////////////////
 router.get('/qrcode/details/:userId', getQrCode) // Get QR code details    ////////////////
 router.get('/singleqrcode/details/:id', getQrCodeById) // Get QR code details by id    ////////////////
-router.post('/qrcode/scan/:userId', scanQrCode) // Scan QR code        ///////////
+router.post('/qrcode/scan/:userId/:id', scanQrCode) // Scan QR code        ///////////
 router.get('/getscannedqrcodes/:userId', getScannedQrCodes) // Get scanned views
 router.post('/create/qrcode', createQrCodeRecord) // Create QR code ////////////
 router.get('/getqrcode/bytype/:userId/:type', getQrCodesByTypeAndUserId); // Fetch QR codes by type

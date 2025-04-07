@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import multer from 'multer';
+import scanSchema from '../Models/scanData.js';
 import geoip from "geoip-lite"; // For fetching location based on IP
 import useragent from "user-agent"; // To parse User-Agent
 const storage = multer.memoryStorage(); // Store image in memory for stream
@@ -301,7 +302,7 @@ export const getScansByQrAndCompany = async (req, res) => {
 export const scanQrCode = async (req, res) => {
     try {
         // Extract ID from route params and other data from query params
-        const { userId } = req.params;
+        const { userId,id } = req.params;
         console.log("userId", userId);
         const {
             browser,
@@ -311,7 +312,7 @@ export const scanQrCode = async (req, res) => {
             city,
             state,
             country,
-        } = req.query;
+        } = req.body;
 
         console.log("Browser Info:", browser, browserVersion);
         console.log("Operating System:", os);
@@ -319,9 +320,21 @@ export const scanQrCode = async (req, res) => {
         console.log("IP Address:", ipAddress);
 
         // Find the QR code record in the database
-        const qrRecord = await qrCodeModel.findOne({ userId });
-        console.log("qrRecord", qrRecord);
-        if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
+        // const qrRecord = await qrCodeModel.findOne({ userId });
+        // console.log("qrRecord", qrRecord);
+        const scanData = new scanSchema({
+            userId,
+            browser,
+            browserVersion,
+            os,
+            ipAddress,
+            city,
+            state,
+            country,
+            qrCodeId: id, // Assuming you want to link the scan data to a specific QR code
+        });
+        await scanData.save(); // Save scan data to the database
+        // if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
 
         // Check if a similar scan entry already exists in scannedData array
         // const existingScanData = qrRecord.scannedData.find(
@@ -332,20 +345,20 @@ export const scanQrCode = async (req, res) => {
         //     existingScanData.views += 1; // Increment views if same browser & OS found
         // } else {
         // Push new entry if no matching data exists
-        qrRecord.scannedData.push({
-            browser,
-            browserVersion,
-            os,
-            ipAddress,
-            city,
-            state,
-            country,
-        });
+        // qrRecord.scannedData.push({
+        //     browser,
+        //     browserVersion,
+        //     os,
+        //     ipAddress,
+        //     city,
+        //     state,
+        //     country,
+        // });
 
 
         // Save updated record to DB
-        await qrRecord.save();
-        res.status(200).json({ message: "Scan successfully" });
+        // await qrRecord.save();
+        res.status(200).json({ message: "Scan successfully", Link: `https://wa.me/your_phone_number` });
     } catch (error) {
         console.error("Error saving scan data:", error);
         res.status(500).json({ error: "Server error" });

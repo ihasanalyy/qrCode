@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 dotenv.config();
 app.use(cors());
-const PORT = 8000;
+const PORT = 3000;
 
 connectDB();
 
