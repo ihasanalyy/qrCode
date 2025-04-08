@@ -2,10 +2,12 @@
 import qrCodeModel from '../Models/qrCodeSchema.js';
 import QRCode from 'qrcode';
 import cloudinary from '../Config/cloudinary.js';
+import { decrypt, encrypt } from '../Utils/encryption.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import multer from 'multer';
+import bcrypt from 'bcrypt';
 import scanSchema from '../Models/scanData.js';
 import geoip from "geoip-lite"; // For fetching location based on IP
 import useragent from "user-agent"; // To parse User-Agent
@@ -85,7 +87,13 @@ export const createQrCodeRecord = async (req, res) => {
         await qrRecord.save();
         console.log("qrRecord", qrRecord);
 
-        res.json({ URL: `https://example.com/${qrRecord._id}`, _id: qrRecord._id });
+        // const hashId = await bcrypt.hash(qrRecord._id.toString(), 10);
+        // console.log("hashId", hashId);
+        const encryptedHashId = encrypt(qrRecord._id.toString());
+        console.log("encryptedHashId", encryptedHashId);
+
+        const encodedHashId = encodeURIComponent(encryptedHashId);
+        res.json({ URL: `https://example.com/${encodedHashId}`, _id: qrRecord?._id });
 
 
     } catch (error) {
@@ -115,10 +123,11 @@ export const getQrCodeById = async (req, res) => {
         const { id } = req.params;
         console.log("id", id);
         const qrRecord = await qrCodeModel.findById(id);
+        const { public_id, ...recordWithoutPublicId } = qrRecord.toObject();
         console.log("qrRecord", qrRecord);
         if (!qrRecord) return res.status(404).json({ error: "QR Code not found" });
 
-        res.json(qrRecord);
+        res.json(recordWithoutPublicId);
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
@@ -299,55 +308,61 @@ export const getScansByQrAndCompany = async (req, res) => {
 
 
 export const scanQrCode = async (req, res) => {
+
     try {
-      const { id } = req.params;
-      const {
-        userId,
-        browser,
-        browserVersion,
-        os,
-        ipAddress,
-        city,
-        state,
-        country,
-      } = req.body;
-  
-      // Save scan data
-      const scanData = new scanSchema({
-        userId,
-        qrCodeId: id,
-        browser,
-        browserVersion,
-        os,
-        ipAddress,
-        city,
-        state,
-        country,
-      });
-      await scanData.save();
-  
-      const scanner = scanData._id;
-  
-      // Fetch QR code record for company message/text
-      const companyRecord = await qrCodeModel.findOne({ _id: id });
-      if (!companyRecord) {
-        return res.status(404).json({ error: "QR Code not found" });
-      }
-  
-      const text = companyRecord?.text;
-  
-      res.status(200).json({
-        message: "Scan successful",
-        Link: `https://wa.me/447718930694?text=${encodeURIComponent(`${text}scanId:${scanner}`)}`,
-      });
-  
+        const { id } = req.params;
+        // const decordedId = await bcrypt.compare(id, id);
+        const decryptedId = decodeURIComponent(id);
+        console.log("decryptedId", decryptedId);
+        const decryptionId = decrypt(decryptedId);
+        console.log("decryptionId", decryptionId);
+        const {
+            userId,
+            browser,
+            browserVersion,
+            os,
+            ipAddress,
+            city,
+            state,
+            country,
+        } = req.body;
+
+        // Save scan data
+        const scanData = new scanSchema({
+            userId,
+            qrCodeId: decryptionId,
+            browser,
+            browserVersion,
+            os,
+            ipAddress,
+            city,
+            state,
+            country,
+        });
+        await scanData.save();
+
+        const scanner = scanData._id;
+
+        // Fetch QR code record for company message/text
+        const companyRecord = await qrCodeModel.findOne({ _id: decryptionId });
+        if (!companyRecord) {
+            return res.status(404).json({ error: "QR Code not found" });
+        }
+
+        const text = companyRecord?.text;
+
+        res.status(200).json({
+            message: "Scan successful",
+            Link: `https://wa.me/447718930694?text=${encodeURIComponent(`${text}scanId:${scanner}`)}`,
+        });
+
     } catch (error) {
-      console.error("Error saving scan data:", error.message);
-      res.status(500).json({ error: "Server error" });
+        console.error("Error saving scan data:", error.message);
+        res.status(500).json({ error: "Server error" });
     }
-  };
-  
-  
+};
+
+
 // export const scanQrCode = async (req, res) => {
 //     try {
 //         // Extract ID from route params and other data from query params
