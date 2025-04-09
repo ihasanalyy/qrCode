@@ -93,7 +93,7 @@ export const createQrCodeRecord = async (req, res) => {
         console.log("encryptedHashId", encryptedHashId);
 
         const encodedHashId = encodeURIComponent(encryptedHashId);
-        res.json({ URL: `https://illustrious-ganache-5752c9.netlify.app/${encodedHashId}`, _id: qrRecord?._id });
+        res.json({ URL: `https://sm-qr-scan.vercel.app/${encodedHashId}`, _id: qrRecord?._id });
 
 
     } catch (error) {
