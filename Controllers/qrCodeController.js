@@ -75,33 +75,8 @@ export const uploadQrCode = async (req, res) => {
 };
 
 // Create QR code
-// export const createQrCodeRecord = async (req, res) => {
-//     try {
-//         const { name, type, text, pickupDetails, userId, company } = req.body;
-//         console.log("name", name, "type", type, "text", text, "pickupDetails", pickupDetails, "userId", userId);
-//         if (!name || !type || (type === "text" && !text) || (type === "location" && !pickupDetails)) {
-//             return res.status(400).json({ error: "Missing required fields" });
-//         }
 
-//         const qrRecord = new qrCodeModel({ name, type, text, pickupDetails, userId, company });
-//         await qrRecord.save();
-//         console.log("qrRecord", qrRecord);
-
-//         // const hashId = await bcrypt.hash(qrRecord._id.toString(), 10);
-//         // console.log("hashId", hashId);
-//         const encryptedHashId = encrypt(qrRecord._id.toString());
-//         console.log("encryptedHashId", encryptedHashId);
-
-//         const encodedHashId = encodeURIComponent(encryptedHashId);
-//         res.json({ URL: `https://sm-qr-scan.vercel.app/${encodedHashId}`, _id: qrRecord?._id });
-
-
-//     } catch (error) {
-//         res.status(500).json({ error: "Server error" });
-//     }
-// };
 import crypto from "crypto";
-
 export const createQrCodeRecord = async (req, res) => {
     try {
         const { name, type, text, pickupDetails, userId, company } = req.body;
@@ -110,11 +85,11 @@ export const createQrCodeRecord = async (req, res) => {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        // 🧠 Custom Hex ID (based on timestamp)
+        // 🧠 Generate Hex Timestamp ID
         const timestamp = Date.now(); // milliseconds
-        const hexId = timestamp.toString(16); // Convert to hexadecimal
+        const hexId = timestamp.toString(16); // Convert to hex
 
-        // 🔧 Create and save QR record
+        // 🔧 Create QR record
         const qrRecord = new qrCodeModel({
             name,
             type,
@@ -122,19 +97,57 @@ export const createQrCodeRecord = async (req, res) => {
             pickupDetails,
             userId,
             company,
-            timestamp: hexId  // Save custom hex ID
+            timestamp: hexId  // ✅ Save hex timestamp here
         });
-        await qrRecord.save();
 
+        await qrRecord.save();
         console.log("hexId", hexId);
 
-        res.json({ URL: `https://sm-qr-scan.vercel.app/${hexId}`, _id: qrRecord._id });
+        res.json({
+            URL: `https://sm-qr-scan.vercel.app/${hexId}`,
+            _id: qrRecord._id,
+        });
 
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json({ error: "Server error" });
     }
 };
+
+
+// export const createQrCodeRecord = async (req, res) => {
+//     try {
+//         const { name, type, text, pickupDetails, userId, company } = req.body;
+
+//         if (!name || !type || (type === "text" && !text) || (type === "location" && !pickupDetails)) {
+//             return res.status(400).json({ error: "Missing required fields" });
+//         }
+
+//         // 🧠 Custom Hex ID (based on timestamp)
+//         const timestamp = Date.now(); // milliseconds
+//         const hexId = timestamp.toString(16); // Convert to hexadecimal
+
+//         // 🔧 Create and save QR record
+//         const qrRecord = new qrCodeModel({
+//             name,
+//             type,
+//             text,
+//             pickupDetails,
+//             userId,
+//             company,
+//             timestamp: hexId  // Save custom hex ID
+//         });
+//         await qrRecord.save();
+
+//         console.log("hexId", hexId);
+
+//         res.json({ URL: `https://sm-qr-scan.vercel.app/${hexId}`, _id: qrRecord._id });
+
+//     } catch (error) {
+//         console.error("Error:", error);
+//         res.status(500).json({ error: "Server error" });
+//     }
+// };
 
 
 // Get QR codes details
@@ -339,22 +352,21 @@ export const getScansByQrAndCompany = async (req, res) => {
     }
 };
 
-
-
 export const scanQrCode = async (req, res) => {
-
     try {
         const { id } = req.params;
-        // const decordedId = await bcrypt.compare(id, id);
-        const decryptedId = decodeURIComponent(id);
-        console.log("decryptedId", decryptedId);
-        const decryptionId = decrypt(decryptedId);
-        const cRecord = await qrCodeModel.findOne({ _id: decryptionId });
-        if (!companyRecord) {
+        const hexId = decodeURIComponent(id);  // This is the customId (hex timestamp)
+        console.log("hexId", hexId);
+
+        const hexIdForScanData = Date.now().toString(16); // Generate a new hex ID for scan data
+        // Find QR Code record using customId (not _id anymore)
+        const qrRecord = await qrCodeModel.findOne({ timestamp: hexId });
+        if (!qrRecord) {
             return res.status(404).json({ error: "QR Code not found" });
         }
-        console.log("decryptionId", decryptionId);
-        const userId = cRecord?.userId;
+
+        const userId = qrRecord?.userId;
+        const text = qrRecord?.text;
         const {
             browser,
             browserVersion,
@@ -368,7 +380,7 @@ export const scanQrCode = async (req, res) => {
         // Save scan data
         const scanData = new scanSchema({
             userId,
-            qrCodeId: decryptionId,
+            qrCodeId: qrRecord._id, // still referencing original Mongo _id for relation
             browser,
             browserVersion,
             os,
@@ -376,22 +388,15 @@ export const scanQrCode = async (req, res) => {
             city,
             state,
             country,
+            timestamp: hexIdForScanData,  // Save new hex ID for scan data
         });
         await scanData.save();
 
-        const scanner = scanData._id;
-
-        // Fetch QR code record for company message/text
-        const companyRecord = await qrCodeModel.findOne({ _id: decryptionId });
-        if (!companyRecord) {
-            return res.status(404).json({ error: "QR Code not found" });
-        }
-
-        const text = companyRecord?.text;
+        
 
         res.status(200).json({
             message: "Scan successful",
-            Link: `https://wa.me/447718930694?text=${encodeURIComponent(`${text}scanId:${scanner}`)}`,
+            Link: `https://wa.me/447718930694?text=${encodeURIComponent(`${text} scanId: ${hexIdForScanData}`)}`,
         });
 
     } catch (error) {
@@ -399,6 +404,67 @@ export const scanQrCode = async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 };
+
+
+
+// export const scanQrCode = async (req, res) => {
+
+//     try {
+//         const { id } = req.params;
+//         // const decordedId = await bcrypt.compare(id, id);
+//         const decryptedId = decodeURIComponent(id);
+//         console.log("decryptedId", decryptedId);
+//         const decryptionId = decrypt(decryptedId);
+//         const cRecord = await qrCodeModel.findOne({ _id: decryptionId });
+//         if (!companyRecord) {
+//             return res.status(404).json({ error: "QR Code not found" });
+//         }
+//         console.log("decryptionId", decryptionId);
+//         const userId = cRecord?.userId;
+//         const {
+//             browser,
+//             browserVersion,
+//             os,
+//             ipAddress,
+//             city,
+//             state,
+//             country,
+//         } = req.body;
+
+//         // Save scan data
+//         const scanData = new scanSchema({
+//             userId,
+//             qrCodeId: decryptionId,
+//             browser,
+//             browserVersion,
+//             os,
+//             ipAddress,
+//             city,
+//             state,
+//             country,
+//         });
+//         await scanData.save();
+
+//         const scanner = scanData._id;
+
+//         // Fetch QR code record for company message/text
+//         const companyRecord = await qrCodeModel.findOne({ _id: decryptionId });
+//         if (!companyRecord) {
+//             return res.status(404).json({ error: "QR Code not found" });
+//         }
+
+//         const text = companyRecord?.text;
+
+//         res.status(200).json({
+//             message: "Scan successful",
+//             Link: `https://wa.me/447718930694?text=${encodeURIComponent(`${text}scanId:${scanner}`)}`,
+//         });
+
+//     } catch (error) {
+//         console.error("Error saving scan data:", error.message);
+//         res.status(500).json({ error: "Server error" });
+//     }
+// };
 
 
 // export const scanQrCode = async (req, res) => {

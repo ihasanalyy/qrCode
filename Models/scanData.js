@@ -10,9 +10,9 @@ const scannedDataSchema = new mongoose.Schema({
     city: { type: String, default: "Unknown" },
     state: { type: String, default: "Unknown" },
     country: { type: String, default: "Unknown" },
-    timestamp: { type: Date, default: Date.now },
     qrCodeId: { type: mongoose.Schema.Types.ObjectId, ref: 'QRCode' },
-  });
+    timestamp: { type: String, unique: true }, //  hex string timestamp
+  }, { timestamps: true });
 
 const data = mongoose.model("scannedDataSchema", scannedDataSchema);
 export default data;
