@@ -19,7 +19,7 @@ const qrCodeSchema = new mongoose.Schema({
   status: { type: String, enum: ["active", "inactive"], default: "active" },
   qrCodeImage: { type: String }, // Local path or S3 URL in future
   scannedViews: { type: Number, default: 0 },
-}, { timestamps: true });
+}, { timestamps: true , unique: true });
 
 const schemaQrCode = mongoose.model("QRCode", qrCodeSchema);
 export default schemaQrCode;

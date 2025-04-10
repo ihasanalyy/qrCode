@@ -75,31 +75,67 @@ export const uploadQrCode = async (req, res) => {
 };
 
 // Create QR code
+// export const createQrCodeRecord = async (req, res) => {
+//     try {
+//         const { name, type, text, pickupDetails, userId, company } = req.body;
+//         console.log("name", name, "type", type, "text", text, "pickupDetails", pickupDetails, "userId", userId);
+//         if (!name || !type || (type === "text" && !text) || (type === "location" && !pickupDetails)) {
+//             return res.status(400).json({ error: "Missing required fields" });
+//         }
+
+//         const qrRecord = new qrCodeModel({ name, type, text, pickupDetails, userId, company });
+//         await qrRecord.save();
+//         console.log("qrRecord", qrRecord);
+
+//         // const hashId = await bcrypt.hash(qrRecord._id.toString(), 10);
+//         // console.log("hashId", hashId);
+//         const encryptedHashId = encrypt(qrRecord._id.toString());
+//         console.log("encryptedHashId", encryptedHashId);
+
+//         const encodedHashId = encodeURIComponent(encryptedHashId);
+//         res.json({ URL: `https://sm-qr-scan.vercel.app/${encodedHashId}`, _id: qrRecord?._id });
+
+
+//     } catch (error) {
+//         res.status(500).json({ error: "Server error" });
+//     }
+// };
+import crypto from "crypto";
+
 export const createQrCodeRecord = async (req, res) => {
     try {
         const { name, type, text, pickupDetails, userId, company } = req.body;
-        console.log("name", name, "type", type, "text", text, "pickupDetails", pickupDetails, "userId", userId);
+
         if (!name || !type || (type === "text" && !text) || (type === "location" && !pickupDetails)) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const qrRecord = new qrCodeModel({ name, type, text, pickupDetails, userId, company });
+        // 🧠 Custom Hex ID (based on timestamp)
+        const timestamp = Date.now(); // milliseconds
+        const hexId = timestamp.toString(16); // Convert to hexadecimal
+
+        // 🔧 Create and save QR record
+        const qrRecord = new qrCodeModel({
+            name,
+            type,
+            text,
+            pickupDetails,
+            userId,
+            company,
+            timestamp: hexId  // Save custom hex ID
+        });
         await qrRecord.save();
-        console.log("qrRecord", qrRecord);
 
-        // const hashId = await bcrypt.hash(qrRecord._id.toString(), 10);
-        // console.log("hashId", hashId);
-        const encryptedHashId = encrypt(qrRecord._id.toString());
-        console.log("encryptedHashId", encryptedHashId);
+        console.log("hexId", hexId);
 
-        const encodedHashId = encodeURIComponent(encryptedHashId);
-        res.json({ URL: `https://sm-qr-scan.vercel.app/${encodedHashId}`, _id: qrRecord?._id });
-
+        res.json({ URL: `https://sm-qr-scan.vercel.app/${hexId}`, _id: qrRecord._id });
 
     } catch (error) {
+        console.error("Error:", error);
         res.status(500).json({ error: "Server error" });
     }
 };
+
 
 // Get QR codes details
 export const getQrCode = async (req, res) => {
