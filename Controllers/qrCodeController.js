@@ -313,9 +313,13 @@ export const scanQrCode = async (req, res) => {
         const decryptedId = decodeURIComponent(id);
         console.log("decryptedId", decryptedId);
         const decryptionId = decrypt(decryptedId);
+        const cRecord = await qrCodeModel.findOne({ _id: decryptionId });
+        if (!companyRecord) {
+            return res.status(404).json({ error: "QR Code not found" });
+        }
         console.log("decryptionId", decryptionId);
+        const userId = cRecord?.userId;
         const {
-            userId,
             browser,
             browserVersion,
             os,
